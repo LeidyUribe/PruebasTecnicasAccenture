@@ -11,6 +11,7 @@ export class CategoryService {
   public categories$: Observable<Category[]> = this.categoriesSubject.asObservable();
   private readonly storageKey = 'categories';
   private storageInitialized = false;
+  private useLocalStorage = false; // Flag para saber qué almacenamiento usar
   
   private readonly defaultColors = [
     '#3880ff', '#3dc2ff', '#2dd36f', 
@@ -26,9 +27,13 @@ export class CategoryService {
     try {
       await this.storage.create();
       this.storageInitialized = true;
+      this.useLocalStorage = false;
       await this.loadCategories();
     } catch (error) {
-      console.error('Error initializing storage:', error);
+      console.warn('Ionic Storage falló, usando localStorage como fallback:', error);
+      this.useLocalStorage = true;
+      this.storageInitialized = true;
+      await this.loadCategories();
     }
   }
 
@@ -36,12 +41,53 @@ export class CategoryService {
     if (!this.storageInitialized) {
       await this.init();
     }
+    
     try {
-      const categories = await this.storage.get(this.storageKey) || [];
+      let categories: Category[] = [];
+      
+      if (this.useLocalStorage) {
+        // Usar localStorage como fallback
+        const stored = localStorage.getItem(this.storageKey);
+        categories = stored ? JSON.parse(stored) : [];
+      } else {
+        // Intentar usar Ionic Storage
+        try {
+          categories = await this.storage.get(this.storageKey) || [];
+        } catch (error) {
+          console.warn('Error al leer de Ionic Storage, cambiando a localStorage:', error);
+          this.useLocalStorage = true;
+          const stored = localStorage.getItem(this.storageKey);
+          categories = stored ? JSON.parse(stored) : [];
+        }
+      }
+      
       this.categoriesSubject.next(categories);
     } catch (error) {
       console.error('Error loading categories:', error);
       this.categoriesSubject.next([]);
+    }
+  }
+
+  private async saveCategories(categories: Category[]): Promise<void> {
+    try {
+      if (this.useLocalStorage) {
+        // Guardar en localStorage
+        localStorage.setItem(this.storageKey, JSON.stringify(categories));
+      } else {
+        // Intentar guardar en Ionic Storage
+        try {
+          await this.storage.set(this.storageKey, categories);
+          // También guardar en localStorage como backup
+          localStorage.setItem(this.storageKey, JSON.stringify(categories));
+        } catch (error) {
+          console.warn('Error al guardar en Ionic Storage, usando localStorage:', error);
+          this.useLocalStorage = true;
+          localStorage.setItem(this.storageKey, JSON.stringify(categories));
+        }
+      }
+    } catch (error) {
+      console.error('Error saving categories:', error);
+      throw error;
     }
   }
 
@@ -69,7 +115,7 @@ export class CategoryService {
     categories.push(newCategory);
     
     try {
-      await this.storage.set(this.storageKey, categories);
+      await this.saveCategories(categories);
       this.categoriesSubject.next([...categories]);
       return newCategory;
     } catch (error) {
@@ -108,7 +154,7 @@ export class CategoryService {
     };
 
     try {
-      await this.storage.set(this.storageKey, categories);
+      await this.saveCategories(categories);
       this.categoriesSubject.next([...categories]);
     } catch (error) {
       console.error('Error updating category:', error);
@@ -124,7 +170,7 @@ export class CategoryService {
     const categories = this.categoriesSubject.value.filter(c => c.id !== id);
     
     try {
-      await this.storage.set(this.storageKey, categories);
+      await this.saveCategories(categories);
       this.categoriesSubject.next([...categories]);
     } catch (error) {
       console.error('Error deleting category:', error);
@@ -138,6 +184,11 @@ export class CategoryService {
 
   getAllCategories(): Category[] {
     return this.categoriesSubject.value;
+  }
+
+  // Método para verificar qué almacenamiento se está usando
+  getStorageType(): 'ionic-storage' | 'localstorage' {
+    return this.useLocalStorage ? 'localstorage' : 'ionic-storage';
   }
 
   private getRandomColor(): string {

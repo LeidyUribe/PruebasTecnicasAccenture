@@ -42,7 +42,6 @@ ion-checkbox {
   margin-right: 16px;
 }
 
-// Optimización: Evitar reflows innecesarios
 ion-item-sliding {
   contain: layout style paint;
 }
