@@ -1,0 +1,69 @@
+<ion-header [translucent]="true">
+  <ion-toolbar color="primary">
+    <ion-title>Lista de Tareas</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content [fullscreen]="true">
+  <div class="container">
+    <!-- Formulario -->
+    <ion-card class="add-todo-card">
+      <ion-card-content>
+        <ion-item>
+          <ion-input
+            [(ngModel)]="newTodoTitle"
+            placeholder="Escribe una nueva tarea..."
+            (keyup.enter)="addTodo()">
+          </ion-input>
+          <ion-button
+            slot="end"
+            fill="solid"
+            color="primary"
+            (click)="addTodo()"
+            [disabled]="!newTodoTitle.trim()">
+            <ion-icon slot="start" name="add"></ion-icon>
+            Agregar
+          </ion-button>
+        </ion-item>
+      </ion-card-content>
+    </ion-card>
+
+    <!-- Lista -->
+    <ion-list *ngIf="todos.length > 0">
+      <ion-item-sliding *ngFor="let todo of todos">
+        <ion-item [class.completed]="todo.completed">
+          <ion-checkbox
+            slot="start"
+            [checked]="todo.completed"
+            (ionChange)="toggleTodo(todo.id)">
+          </ion-checkbox>
+          <ion-label>
+            <h2 [class.completed-text]="todo.completed">{{ todo.title }}</h2>
+            <p>{{ todo.createdAt | date:'short' }}</p>
+          </ion-label>
+        </ion-item>
+        <ion-item-options side="end">
+          <ion-item-option color="danger" (click)="deleteTodo(todo.id)">
+            <ion-icon slot="icon-only" name="trash"></ion-icon>
+          </ion-item-option>
+        </ion-item-options>
+      </ion-item-sliding>
+    </ion-list>
+
+    <!-- Estadísticas -->
+    <ion-card *ngIf="todos.length > 0" class="stats-card">
+      <ion-card-content>
+        <div class="stats">
+          <div class="stat-item">
+            <span class="stat-number">{{ todos.length }}</span>
+            <span class="stat-label">Total</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-number">{{ getCompletedCount() }}</span>
+            <span class="stat-label">Completadas</span>
+          </div>
+        </div>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
