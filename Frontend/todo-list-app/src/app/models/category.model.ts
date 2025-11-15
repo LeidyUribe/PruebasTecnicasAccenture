@@ -2,5 +2,7 @@ export interface Category {
   id: string;
   name: string;
   color: string;
-  createdAt: Date;
+  icon?: string;
+  createdAt: number;
+  updatedAt: number;
 }
