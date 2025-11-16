@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { TaskService } from '../services/task.service';
 import { CategoryService } from '../services/category.service';
@@ -13,10 +13,11 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./tasks.page.scss'],
   standalone: false,
 })
-export class TasksPage implements OnInit, OnDestroy {
+export class TasksPage implements OnInit, OnDestroy, AfterViewInit {
   tasks: Task[] = [];
   categories: Category[] = [];
   selectedCategoryId: string = 'all';
+
   private destroy$ = new Subject<void>();
 
   constructor(
@@ -27,14 +28,14 @@ export class TasksPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    // Suscribirse a cambios de tareas
+    // SUBSCRIBE: Cambios en tareas
     this.taskService.tasks$
       .pipe(takeUntil(this.destroy$))
       .subscribe((tasks) => {
-        this.filterTasks();
+        this.filterTasks(tasks); // ← CORRECTO
       });
 
-    // Suscribirse a cambios de categorías
+    // SUBSCRIBE: Cambios en categorías
     this.categoryService.categories$
       .pipe(takeUntil(this.destroy$))
       .subscribe((categories) => {
@@ -42,13 +43,19 @@ export class TasksPage implements OnInit, OnDestroy {
       });
   }
 
+  ngAfterViewInit() {
+    console.log("Tasks en vista:", this.tasks);
+    console.log("Categorías:", this.categories);
+    console.log("selectedCategoryId:", this.selectedCategoryId);
+  }
+
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();
   }
 
-  filterTasks() {
-    const allTasks = this.taskService.getAllTasks();
+  // FILTRO CORREGIDO
+  filterTasks(allTasks: Task[]) {
     if (this.selectedCategoryId === 'all') {
       this.tasks = allTasks;
     } else {
@@ -60,10 +67,10 @@ export class TasksPage implements OnInit, OnDestroy {
 
   onCategoryFilterChange(event: any) {
     this.selectedCategoryId = event.detail.value;
-    this.filterTasks();
+    this.filterTasks(this.taskService.getAllTasks());
   }
 
-  // CREATE - Crear tarea
+  // CREATE
   async createTask() {
     let selectedCategoryId =
       this.selectedCategoryId !== 'all' ? this.selectedCategoryId : '';
@@ -90,7 +97,7 @@ export class TasksPage implements OnInit, OnDestroy {
 
     const alert = await this.alertController.create({
       header: 'Nueva Tarea',
-      inputs: inputs,
+      inputs,
       buttons: [
         {
           text: 'Cancelar',
@@ -105,11 +112,10 @@ export class TasksPage implements OnInit, OnDestroy {
                     'Seleccionar Categoría',
                     selectedCategoryId
                   );
-                  console.log(category)
                   if (category !== null) {
                     selectedCategoryId = category;
                   }
-                  return false;
+                  return false; // Mantener abierto
                 },
               },
             ]
@@ -117,20 +123,23 @@ export class TasksPage implements OnInit, OnDestroy {
         {
           text: 'Crear',
           handler: async (data): Promise<boolean> => {
-            if (data.title?.trim()) {
-              try {
-                await this.taskService.createTask(
-                  data.title.trim(),
-                  data.categoryId
-                );
-                await this.showToast('Tarea creada exitosamente', 'success');
-                return true;
-              } catch (error) {
-                await this.showToast('Error al crear la tarea', 'danger');
-                return false;
-              }
-            } else {
+            if (!data.title?.trim()) {
               await this.showToast('El título es requerido', 'warning');
+              return false;
+            }
+
+            try {
+              // ✔ Categoría corregida aquí
+              await this.taskService.createTask(
+                data.title.trim(),
+                data.description,
+                selectedCategoryId
+              );
+
+              await this.showToast('Tarea creada exitosamente', 'success');
+              return true;
+            } catch {
+              await this.showToast('Error al crear la tarea', 'danger');
               return false;
             }
           },
@@ -167,8 +176,8 @@ export class TasksPage implements OnInit, OnDestroy {
       });
 
       const alert = await this.alertController.create({
-        header: header,
-        inputs: inputs,
+        header,
+        inputs,
         buttons: [
           {
             text: 'Cancelar',
@@ -177,9 +186,7 @@ export class TasksPage implements OnInit, OnDestroy {
           },
           {
             text: 'Seleccionar',
-            handler: (data) => {
-              resolve(data || '');
-            },
+            handler: (data) => resolve(data || ''),
           },
         ],
       });
@@ -188,101 +195,100 @@ export class TasksPage implements OnInit, OnDestroy {
     });
   }
 
-  // READ - Listar tareas (ya está en ngOnInit con suscripción)
-  // UPDATE - Editar tarea
+  // EDIT
   async editTask(task: Task) {
-  let selectedCategoryId = task.categoryId || '';
+    let selectedCategoryId = task.categoryId || '';
 
-  const inputs: any[] = [
-    {
-      name: 'title',
-      type: 'text',
-      value: task.title,
-      placeholder: 'Título de la tarea',
-      attributes: {
-        maxlength: 100,
-        required: true,
-      },
-    },
-    {
-      name: 'description',
-      type: 'textarea',
-      value: task.description || '',
-      placeholder: 'Descripción (opcional)',
-      attributes: {
-        maxlength: 500,
-      },
-    },
-  ];
-
-  const alert = await this.alertController.create({
-    header: 'Editar Tarea',
-    inputs: inputs,
-    buttons: [
+    const inputs: any[] = [
       {
-        text: 'Cancelar',
-        role: 'cancel',
-      },
-      ...(this.categories.length > 0
-        ? [
-            {
-              text: 'Cambiar Categoría',
-              handler: (): boolean => {
-                // Lógica para cambiar categoría
-                // Retornar false para mantener el alert abierto
-                // o true para cerrarlo
-                return false; // Ejemplo: mantener abierto
-              }
-            },
-          ]
-        : []),
-      {
-        text: 'Guardar',
-        handler: async (data): Promise<boolean> => {
-          // Validación
-          if (!data.title?.trim()) {
-            await this.showToast('El título es requerido', 'warning');
-            return false;
-          }
-
-          try {
-            await this.taskService.updateTask(task.id, {
-              title: data.title.trim(),
-              description: data.description?.trim(),
-              categoryId: selectedCategoryId && selectedCategoryId !== 'all' 
-                ? selectedCategoryId 
-                : undefined,
-            });
-            await this.showToast('Tarea actualizada exitosamente', 'success');
-            return true;
-          } catch (error: any) {
-            await this.showToast(
-              error.message || 'Error al actualizar la tarea',
-              'danger'
-            );
-            return false;
-          }
+        name: 'title',
+        type: 'text',
+        value: task.title,
+        placeholder: 'Título de la tarea',
+        attributes: {
+          maxlength: 100,
+          required: true,
         },
       },
-    ],
-  });
+      {
+        name: 'description',
+        type: 'textarea',
+        value: task.description || '',
+        placeholder: 'Descripción (opcional)',
+        attributes: {
+          maxlength: 500,
+        },
+      },
+    ];
 
-  await alert.present();
-}
-  // UPDATE - Completar tarea
+    const alert = await this.alertController.create({
+      header: 'Editar Tarea',
+      inputs,
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        ...(this.categories.length > 0
+          ? [
+              {
+                text: 'Cambiar Categoría',
+                handler: async () => {
+                  const category = await this.showCategorySelector(
+                    'Cambiar Categoría',
+                    selectedCategoryId
+                  );
+                  if (category !== null) {
+                    selectedCategoryId = category;
+                  }
+                  return false;
+                },
+              },
+            ]
+          : []),
+        {
+          text: 'Guardar',
+          handler: async (data): Promise<boolean> => {
+            if (!data.title?.trim()) {
+              await this.showToast('El título es requerido', 'warning');
+              return false;
+            }
+
+            try {
+              await this.taskService.updateTask(task.id, {
+                title: data.title.trim(),
+                description: data.description?.trim(),
+                categoryId: selectedCategoryId || undefined,
+              });
+
+              await this.showToast('Tarea actualizada correctamente', 'success');
+              return true;
+            } catch (error: any) {
+              await this.showToast(error.message, 'danger');
+              return false;
+            }
+          },
+        },
+      ],
+    });
+
+    await alert.present();
+  }
+
+  // COMPLETE
   async toggleComplete(id: string) {
     try {
       await this.taskService.toggleComplete(id);
-    } catch (error) {
-      await this.showToast('Error al actualizar la tarea', 'danger');
+    } catch {
+      await this.showToast('Error al actualizar', 'danger');
     }
   }
 
-  // DELETE - Eliminar tarea
+  // DELETE
   async deleteTask(id: string) {
     const alert = await this.alertController.create({
-      header: 'Confirmar Eliminación',
-      message: '¿Estás seguro de que deseas eliminar esta tarea?',
+      header: 'Eliminar Tarea',
+      message: '¿Estás seguro?',
       buttons: [
         {
           text: 'Cancelar',
@@ -294,9 +300,9 @@ export class TasksPage implements OnInit, OnDestroy {
           handler: async () => {
             try {
               await this.taskService.deleteTask(id);
-              await this.showToast('Tarea eliminada exitosamente', 'success');
-            } catch (error) {
-              await this.showToast('Error al eliminar la tarea', 'danger');
+              await this.showToast('Tarea eliminada', 'success');
+            } catch {
+              await this.showToast('Error al eliminar', 'danger');
             }
           },
         },
@@ -306,16 +312,15 @@ export class TasksPage implements OnInit, OnDestroy {
     await alert.present();
   }
 
+  // HELPERS
   getCategoryName(categoryId?: string): string {
     if (!categoryId) return 'Sin categoría';
-    const category = this.categories.find((c) => c.id === categoryId);
-    return category ? category.name : 'Sin categoría';
+    return this.categories.find((c) => c.id === categoryId)?.name || 'Sin categoría';
   }
 
   getCategoryColor(categoryId?: string): string {
     if (!categoryId) return '#999';
-    const category = this.categories.find((c) => c.id === categoryId);
-    return category ? category.color : '#999';
+    return this.categories.find((c) => c.id === categoryId)?.color || '#999';
   }
 
   getContrastColor(hexColor: string): string {
@@ -323,25 +328,20 @@ export class TasksPage implements OnInit, OnDestroy {
     const g = parseInt(hexColor.slice(3, 5), 16);
     const b = parseInt(hexColor.slice(5, 7), 16);
     const brightness = (r * 299 + g * 587 + b * 114) / 1000;
-    return brightness > 128 ? '#000000' : '#ffffff';
+    return brightness > 128 ? '#000' : '#fff';
   }
 
-  // Método auxiliar para trackBy (optimización)
-  trackByTaskId(index: number, task: Task): string {
+  trackByTaskId(index: number, task: Task) {
     return task.id;
   }
 
-  // Método auxiliar para mostrar toasts
-  private async showToast(
-    message: string,
-    color: 'success' | 'danger' | 'warning'
-  ) {
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning') {
     const toast = await this.toastController.create({
       message,
       duration: 2000,
       color,
       position: 'bottom',
     });
-    await toast.present();
+    toast.present();
   }
 }

@@ -11,50 +11,67 @@
     </ion-toolbar>
   </ion-header>
 
-  <!-- Filtro por categoría -->
+  <!-- =========================
+       FILTRO POR CATEGORÍA
+  ========================== -->
   <ion-item *ngIf="categories.length > 0">
     <ion-label>Filtrar por categoría</ion-label>
-    <ion-select 
-      [(ngModel)]="selectedCategoryId" 
+    <ion-select
+      [(ngModel)]="selectedCategoryId"
       (ionChange)="onCategoryFilterChange($event)"
       interface="popover">
+
       <ion-select-option value="all">Todas las tareas</ion-select-option>
-      <ion-select-option *ngFor="let category of categories" [value]="category.id">
+
+      <ion-select-option
+        *ngFor="let category of categories"
+        [value]="category.id">
         {{ category.name }}
       </ion-select-option>
+
     </ion-select>
   </ion-item>
 
-  <!-- Estado vacío -->
+  <!-- =========================
+       ESTADO VACÍO
+  ========================== -->
   <div *ngIf="tasks.length === 0" class="empty-state">
     <ion-icon name="checkmark-circle-outline" size="large"></ion-icon>
     <p>No hay tareas. ¡Crea una nueva!</p>
   </div>
 
-  <!-- Lista de tareas con trackBy para optimización -->
+  <!-- =========================
+       LISTA DE TAREAS
+  ========================== -->
   <ion-list *ngIf="tasks.length > 0">
-    <ion-item-sliding 
+    <ion-item-sliding
       *ngFor="let task of tasks; trackBy: trackByTaskId"
       [attr.data-id]="task.id">
-      
+
       <ion-item [class.completed]="task.completed">
-        <ion-checkbox 
+
+        <!-- Checkbox -->
+        <ion-checkbox
           slot="start"
-          [checked]="task.completed" 
+          [checked]="task.completed"
           (ionChange)="toggleComplete(task.id)">
         </ion-checkbox>
-        
+
+        <!-- Contenido Tarea -->
         <ion-label (click)="editTask(task)">
           <h2 [class.completed-text]="task.completed">{{ task.title }}</h2>
+
           <p *ngIf="task.description">{{ task.description }}</p>
+
           <div class="category-badge">
-            <ion-chip 
-              *ngIf="task.categoryId" 
+            <ion-chip
+              *ngIf="task.categoryId"
               [style.background-color]="getCategoryColor(task.categoryId)"
               [style.color]="getContrastColor(getCategoryColor(task.categoryId))">
               <ion-icon name="pricetag-outline"></ion-icon>
               <ion-label>{{ getCategoryName(task.categoryId) }}</ion-label>
             </ion-chip>
+
             <ion-chip *ngIf="!task.categoryId" color="medium" outline>
               <ion-icon name="pricetag-outline"></ion-icon>
               <ion-label>Sin categoría</ion-label>
@@ -62,30 +79,34 @@
           </div>
         </ion-label>
       </ion-item>
-      
+
+      <!-- Opciones deslizar derecha (EDIT / DELETE) -->
       <ion-item-options side="end">
         <ion-item-option color="primary" (click)="editTask(task)">
           <ion-icon slot="icon-only" name="create"></ion-icon>
           Editar
         </ion-item-option>
+
         <ion-item-option color="danger" expandable (click)="deleteTask(task.id)">
           <ion-icon slot="icon-only" name="trash"></ion-icon>
           Eliminar
         </ion-item-option>
       </ion-item-options>
-      
+
+      <!-- Opciones deslizar izquierda -->
       <ion-item-options side="start">
         <ion-item-option color="danger" (click)="deleteTask(task.id)">
           <ion-icon slot="icon-only" name="trash"></ion-icon>
         </ion-item-option>
       </ion-item-options>
+
     </ion-item-sliding>
   </ion-list>
 
-  <!-- Botón flotante para agregar -->
   <ion-fab vertical="bottom" horizontal="end" slot="fixed">
     <ion-fab-button (click)="createTask()">
       <ion-icon name="add"></ion-icon>
     </ion-fab-button>
   </ion-fab>
+
 </ion-content>

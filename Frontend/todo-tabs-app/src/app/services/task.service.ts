@@ -95,10 +95,11 @@ export class TaskService {
       title: title.trim(),
       description: description?.trim(),
       completed: false,
-      categoryId,
+      categoryId: categoryId,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
+    console.log(categoryId)
 
     const tasks = this.tasksSubject.value;
     tasks.push(newTask);
