@@ -1,0 +1,7 @@
+{
+  "name": "todo-tabs-app",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}

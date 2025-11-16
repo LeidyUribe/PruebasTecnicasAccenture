@@ -68,6 +68,8 @@ export class HomePage implements OnInit, OnDestroy {
   }
 
   async createTodo() {
+    let selectedCategoryId = this.selectedCategoryId !== 'all' ? this.selectedCategoryId : '';
+
     const inputs: any[] = [
       {
         name: 'title',
@@ -88,16 +90,6 @@ export class HomePage implements OnInit, OnDestroy {
       }
     ];
 
-    // Agregar selector de categoría si está habilitado
-    if (this.showCategories && this.categories.length > 0) {
-      inputs.push({
-        name: 'categoryId',
-        type: 'text',
-        placeholder: 'Categoría',
-        value: this.selectedCategoryId !== 'all' ? this.selectedCategoryId : ''
-      });
-    }
-
     const alert = await this.alertController.create({
       header: 'Nueva Tarea',
       inputs: inputs,
@@ -106,6 +98,16 @@ export class HomePage implements OnInit, OnDestroy {
           text: 'Cancelar',
           role: 'cancel'
         },
+        ...(this.showCategories && this.categories.length > 0 ? [{
+          text: 'Seleccionar Categoría',
+          handler: async () => {
+            const category = await this.showCategorySelector('Seleccionar Categoría', selectedCategoryId);
+            if (category !== null) {
+              selectedCategoryId = category;
+            }
+            return false; // No cerrar el alert
+          }
+        }] : []),
         {
           text: 'Crear',
           handler: async (data) => {
@@ -114,7 +116,7 @@ export class HomePage implements OnInit, OnDestroy {
                 await this.todoService.createTodo(
                   data.title.trim(),
                   data.description?.trim(),
-                  data.categoryId && data.categoryId !== 'all' ? data.categoryId : undefined
+                  selectedCategoryId && selectedCategoryId !== 'all' ? selectedCategoryId : undefined
                 );
                 await this.showToast('Tarea creada exitosamente', 'success');
               } catch (error) {
@@ -127,6 +129,51 @@ export class HomePage implements OnInit, OnDestroy {
     });
 
     await alert.present();
+  }
+
+  private async showCategorySelector(header: string, selectedValue: string = ''): Promise<string | null> {
+    return new Promise(async (resolve) => {
+      const inputs: any[] = [
+        {
+          name: 'category',
+          type: 'radio',
+          label: 'Sin categoría',
+          value: '',
+          checked: !selectedValue
+        }
+      ];
+
+      // Agregar cada categoría como opción de radio
+      this.categories.forEach(cat => {
+        inputs.push({
+          name: 'category',
+          type: 'radio',
+          label: cat.name,
+          value: cat.id,
+          checked: selectedValue === cat.id
+        });
+      });
+
+      const alert = await this.alertController.create({
+        header: header,
+        inputs: inputs,
+        buttons: [
+          {
+            text: 'Cancelar',
+            role: 'cancel',
+            handler: () => resolve(null)
+          },
+          {
+            text: 'Seleccionar',
+            handler: (data) => {
+              resolve(data || '');
+            }
+          }
+        ]
+      });
+
+      await alert.present();
+    });
   }
 
   async editTodo(todo: Todo) {
@@ -152,14 +199,7 @@ export class HomePage implements OnInit, OnDestroy {
       }
     ];
 
-    if (this.showCategories && this.categories.length > 0) {
-      inputs.push({
-        name: 'categoryId',
-        type: 'text',
-        value: todo.categoryId || '',
-        placeholder: 'Categoría'
-      });
-    }
+    let selectedCategoryId = todo.categoryId || '';
 
     const alert = await this.alertController.create({
       header: 'Editar Tarea',
@@ -170,6 +210,20 @@ export class HomePage implements OnInit, OnDestroy {
           role: 'cancel'
         },
         {
+          text: 'Cambiar Categoría',
+          handler: async () => {
+                          console.log(this.categories)
+
+            if (this.showCategories && this.categories.length > 0) {
+              const category = await this.showCategorySelector('Seleccionar Categoría', selectedCategoryId);
+              if (category !== null) {
+                selectedCategoryId = category;
+              }
+            }
+            return false; // No cerrar el alert
+          }
+        },
+        {
           text: 'Guardar',
           handler: async (data) => {
             if (data.title && data.title.trim()) {
@@ -177,7 +231,7 @@ export class HomePage implements OnInit, OnDestroy {
                 await this.todoService.updateTodo(todo.id, {
                   title: data.title.trim(),
                   description: data.description?.trim(),
-                  categoryId: data.categoryId && data.categoryId !== 'all' ? data.categoryId : undefined
+                  categoryId: selectedCategoryId && selectedCategoryId !== 'all' ? selectedCategoryId : undefined
                 });
                 await this.showToast('Tarea actualizada exitosamente', 'success');
               } catch (error) {
@@ -237,6 +291,15 @@ export class HomePage implements OnInit, OnDestroy {
     if (!categoryId) return '#999';
     const category = this.categories.find(c => c.id === categoryId);
     return category ? category.color : '#999';
+  }
+
+  getContrastColor(hexColor: string): string {
+    // Función para obtener color de texto contrastante (blanco o negro)
+    const r = parseInt(hexColor.slice(1, 3), 16);
+    const g = parseInt(hexColor.slice(3, 5), 16);
+    const b = parseInt(hexColor.slice(5, 7), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness > 128 ? '#000000' : '#ffffff';
   }
 
   trackByTodoId(index: number, todo: Todo): string {

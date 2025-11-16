@@ -47,11 +47,19 @@
         <ion-label (click)="editTodo(todo)">
           <h2 [class.completed-text]="todo.completed">{{ todo.title }}</h2>
           <p *ngIf="todo.description">{{ todo.description }}</p>
-          <p *ngIf="showCategories && todo.categoryId" 
-             [style.color]="getCategoryColor(todo.categoryId)">
-            <ion-icon name="pricetag-outline" size="small"></ion-icon>
-            {{ getCategoryName(todo.categoryId) }}
-          </p>
+          <div *ngIf="showCategories" class="category-badge">
+            <ion-chip 
+              *ngIf="todo.categoryId" 
+              [style.background-color]="getCategoryColor(todo.categoryId)"
+              [style.color]="getContrastColor(getCategoryColor(todo.categoryId))">
+              <ion-icon name="pricetag-outline"></ion-icon>
+              <ion-label>{{ getCategoryName(todo.categoryId) }}</ion-label>
+            </ion-chip>
+            <ion-chip *ngIf="!todo.categoryId" color="medium" outline>
+              <ion-icon name="pricetag-outline"></ion-icon>
+              <ion-label>Sin categoría</ion-label>
+            </ion-chip>
+          </div>
         </ion-label>
       </ion-item>
       
@@ -60,9 +68,16 @@
           <ion-icon slot="icon-only" name="create"></ion-icon>
           Editar
         </ion-item-option>
-        <ion-item-option color="danger" (click)="deleteTodo(todo.id)">
+        <ion-item-option color="danger" expandable (click)="deleteTodo(todo.id)">
           <ion-icon slot="icon-only" name="trash"></ion-icon>
           Eliminar
+        </ion-item-option>
+      </ion-item-options>
+      
+      <!-- Opción de eliminar desde el inicio también -->
+      <ion-item-options side="start">
+        <ion-item-option color="danger" (click)="deleteTodo(todo.id)">
+          <ion-icon slot="icon-only" name="trash"></ion-icon>
         </ion-item-option>
       </ion-item-options>
     </ion-item-sliding>
