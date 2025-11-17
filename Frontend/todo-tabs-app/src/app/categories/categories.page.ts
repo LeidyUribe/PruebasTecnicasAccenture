@@ -9,7 +9,7 @@ import { takeUntil } from 'rxjs/operators';
   selector: 'app-categories',
   templateUrl: './categories.page.html',
   styleUrls: ['./categories.page.scss'],
-  standalone: false
+  standalone: false,
 })
 export class CategoriesPage implements OnInit, OnDestroy {
   categories: Category[] = [];
@@ -23,19 +23,22 @@ export class CategoriesPage implements OnInit, OnDestroy {
     { name: 'Rojo', value: '#eb445a' },
     { name: 'Gris', value: '#92949c' },
     { name: 'Morado', value: '#9c27b0' },
-    { name: 'Naranja', value: '#ff9800' }
+    { name: 'Naranja', value: '#ff9800' },
   ];
+
+  enableCategories = false;
 
   constructor(
     private categoryService: CategoryService,
     private alertController: AlertController,
-    private toastController: ToastController
+    private toastController: ToastController,
   ) {}
 
   ngOnInit() {
+
     this.categoryService.categories$
       .pipe(takeUntil(this.destroy$))
-      .subscribe(categories => {
+      .subscribe((categories) => {
         this.categories = categories;
       });
   }
@@ -46,105 +49,115 @@ export class CategoriesPage implements OnInit, OnDestroy {
   }
 
   // CREATE - Crear categoría
-async createCategory() {
-  const alert = await this.alertController.create({
-    header: 'Nueva Categoría',
-    inputs: [
-      {
-        name: 'name',
-        type: 'text',
-        placeholder: 'Nombre de la categoría',
-        attributes: {
-          maxlength: 50,
-          required: true
-        }
-      }
-    ],
-    buttons: [
-      {
-        text: 'Cancelar',
-        role: 'cancel'
-      },
-      {
-        text: 'Crear',
-        handler: async (data): Promise<boolean> => {
-          if (!data.name?.trim()) {
-            await this.showToast('El nombre es requerido', 'warning');
-            return false;
-          }
+  async createCategory() {
+    const alert = await this.alertController.create({
+      header: 'Nueva Categoría',
+      inputs: [
+        {
+          name: 'name',
+          type: 'text',
+          placeholder: 'Nombre de la categoría',
+          attributes: {
+            maxlength: 50,
+            required: true,
+          },
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        {
+          text: 'Crear',
+          handler: async (data): Promise<boolean> => {
+            if (!data.name?.trim()) {
+              await this.showToast('El nombre es requerido', 'warning');
+              return false;
+            }
 
-          try {
-            await this.categoryService.createCategory(data.name.trim());
-            await this.showToast('Categoría creada exitosamente', 'success');
-            return true;
-          } catch (error: any) {
-            await this.showToast(error.message || 'Error al crear la categoría', 'danger');
-            return false;
-          }
-        }
-      }
-    ]
-  });
+            try {
+              await this.categoryService.createCategory(data.name.trim());
+              await this.showToast('Categoría creada exitosamente', 'success');
+              return true;
+            } catch (error: any) {
+              await this.showToast(
+                error.message || 'Error al crear la categoría',
+                'danger'
+              );
+              return false;
+            }
+          },
+        },
+      ],
+    });
 
-  await alert.present();
-}
+    await alert.present();
+  }
 
-// UPDATE - Editar categoría (versión corregida)
-async editCategory(category: Category) {
-  const alert = await this.alertController.create({
-    header: 'Editar Categoría',
-    inputs: [
-      {
-        name: 'name',
-        type: 'text',
-        value: category.name,
-        placeholder: 'Nombre de la categoría',
-        attributes: {
-          maxlength: 50,
-          required: true
-        }
-      }
-    ],
-    buttons: [
-      {
-        text: 'Cancelar',
-        role: 'cancel'
-      },
-      {
-        text: 'Guardar',
-        handler: async (data): Promise<boolean> => {
-          if (!data.name?.trim()) {
-            await this.showToast('El nombre es requerido', 'warning');
-            return false;
-          }
+  // UPDATE - Editar categoría (versión corregida)
+  async editCategory(category: Category) {
+    const alert = await this.alertController.create({
+      header: 'Editar Categoría',
+      inputs: [
+        {
+          name: 'name',
+          type: 'text',
+          value: category.name,
+          placeholder: 'Nombre de la categoría',
+          attributes: {
+            maxlength: 50,
+            required: true,
+          },
+        },
+      ],
+      buttons: [
+        {
+          text: 'Cancelar',
+          role: 'cancel',
+        },
+        {
+          text: 'Guardar',
+          handler: async (data): Promise<boolean> => {
+            if (!data.name?.trim()) {
+              await this.showToast('El nombre es requerido', 'warning');
+              return false;
+            }
 
-          try {
-            await this.categoryService.updateCategory(category.id, { 
-              name: data.name.trim() 
-            });
-            await this.showToast('Categoría actualizada exitosamente', 'success');
-            return true;
-          } catch (error: any) {
-            await this.showToast(error.message || 'Error al actualizar la categoría', 'danger');
-            return false;
-          }
-        }
-      }
-    ]
-  });
+            try {
+              await this.categoryService.updateCategory(category.id, {
+                name: data.name.trim(),
+              });
+              await this.showToast(
+                'Categoría actualizada exitosamente',
+                'success'
+              );
+              return true;
+            } catch (error: any) {
+              await this.showToast(
+                error.message || 'Error al actualizar la categoría',
+                'danger'
+              );
+              return false;
+            }
+          },
+        },
+      ],
+    });
 
-  await alert.present();
-}
+    await alert.present();
+  }
 
   // DELETE - Eliminar categoría
   async deleteCategory(id: string) {
     const alert = await this.alertController.create({
       header: 'Confirmar Eliminación',
-      message: '¿Estás seguro de que deseas eliminar esta categoría? Las tareas asociadas no se eliminarán.',
+      message:
+        '¿Estás seguro de que deseas eliminar esta categoría? Las tareas asociadas no se eliminarán.',
       buttons: [
         {
           text: 'Cancelar',
-          role: 'cancel'
+          role: 'cancel',
         },
         {
           text: 'Eliminar',
@@ -152,13 +165,16 @@ async editCategory(category: Category) {
           handler: async () => {
             try {
               await this.categoryService.deleteCategory(id);
-              await this.showToast('Categoría eliminada exitosamente', 'success');
+              await this.showToast(
+                'Categoría eliminada exitosamente',
+                'success'
+              );
             } catch (error) {
               await this.showToast('Error al eliminar la categoría', 'danger');
             }
-          }
-        }
-      ]
+          },
+        },
+      ],
     });
 
     await alert.present();
@@ -170,12 +186,15 @@ async editCategory(category: Category) {
   }
 
   // Método auxiliar para mostrar toasts
-  private async showToast(message: string, color: 'success' | 'danger' | 'warning') {
+  private async showToast(
+    message: string,
+    color: 'success' | 'danger' | 'warning'
+  ) {
     const toast = await this.toastController.create({
       message,
       duration: 2000,
       color,
-      position: 'bottom'
+      position: 'bottom',
     });
     await toast.present();
   }

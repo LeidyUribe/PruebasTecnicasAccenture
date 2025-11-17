@@ -212,7 +212,6 @@ export class HomePage implements OnInit, OnDestroy {
         {
           text: 'Cambiar Categoría',
           handler: async () => {
-                          console.log(this.categories)
 
             if (this.showCategories && this.categories.length > 0) {
               const category = await this.showCategorySelector('Seleccionar Categoría', selectedCategoryId);

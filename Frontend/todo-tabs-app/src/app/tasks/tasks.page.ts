@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy, AfterViewInit } from '@angular/core';
 import { AlertController, ToastController } from '@ionic/angular';
 import { TaskService } from '../services/task.service';
 import { CategoryService } from '../services/category.service';
+
 import { Task } from '../models/task.model';
 import { Category } from '../models/category.model';
 import { Subject } from 'rxjs';
@@ -28,6 +29,7 @@ export class TasksPage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
+
     // SUBSCRIBE: Cambios en tareas
     this.taskService.tasks$
       .pipe(takeUntil(this.destroy$))

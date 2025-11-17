@@ -57,9 +57,10 @@
               "outputHashing": "all"
             },
             "development": {
-              "buildOptimizer": false,
-              "optimization": false,
+              "buildOptimizer": true,
+              "optimization": true,
               "vendorChunk": true,
+              "commonChunk": true,
               "extractLicenses": false,
               "sourceMap": true,
               "namedChunks": true
