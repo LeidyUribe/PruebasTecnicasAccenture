@@ -99,7 +99,6 @@ export class TaskService {
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
-    console.log(categoryId)
 
     const tasks = this.tasksSubject.value;
     tasks.push(newTask);

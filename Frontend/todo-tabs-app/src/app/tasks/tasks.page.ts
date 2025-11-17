@@ -43,12 +43,6 @@ export class TasksPage implements OnInit, OnDestroy, AfterViewInit {
       });
   }
 
-  ngAfterViewInit() {
-    console.log("Tasks en vista:", this.tasks);
-    console.log("Categorías:", this.categories);
-    console.log("selectedCategoryId:", this.selectedCategoryId);
-  }
-
   ngOnDestroy() {
     this.destroy$.next();
     this.destroy$.complete();

@@ -3,10 +3,11 @@ import { BrowserModule } from '@angular/platform-browser';
 import { RouteReuseStrategy } from '@angular/router';
 import { HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import * as CordovaSQLiteDriver from 'localforage-cordovasqlitedriver';
+
 
 import { IonicModule, IonicRouteStrategy } from '@ionic/angular';
 import { IonicStorageModule } from '@ionic/storage-angular';
-import * as CordovaSQLiteDriver from 'localforage-cordovasqlitedriver';
 
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
@@ -24,12 +25,8 @@ import { AppRoutingModule } from './app-routing.module';
     AppRoutingModule,
     IonicStorageModule.forRoot({
       name: '__mytabsappdb',
-      driverOrder: [
-        CordovaSQLiteDriver._driver,
-        'indexeddb',
-        'websql',
-        'localstorage'
-      ]
+      driverOrder: [CordovaSQLiteDriver._driver, 'indexeddb', 'localstorage']
+
     })
   ],
   providers: [
