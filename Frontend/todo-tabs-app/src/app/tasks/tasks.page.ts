@@ -13,7 +13,7 @@ import { takeUntil } from 'rxjs/operators';
   styleUrls: ['./tasks.page.scss'],
   standalone: false,
 })
-export class TasksPage implements OnInit, OnDestroy, AfterViewInit {
+export class TasksPage implements OnInit, OnDestroy {
   tasks: Task[] = [];
   categories: Category[] = [];
   selectedCategoryId: string = 'all';
