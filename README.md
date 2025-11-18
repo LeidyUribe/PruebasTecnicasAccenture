@@ -1,5 +1,5 @@
 
-# 🚀 Proyecto Ionic + Angular — Prueba Técnic
+# 🚀 Proyecto Ionic + Angular — Prueba Técnica
 
 Este documento describe la arquitectura, ejecución, configuración y funcionalidades implementadas en esta aplicación híbrida desarrollada con **Ionic 7 + Angular 17**, integrando **Firebase Remote Config**, CRUD de tareas y categorías, optimizaciones de rendimiento y estructura modular.
 
