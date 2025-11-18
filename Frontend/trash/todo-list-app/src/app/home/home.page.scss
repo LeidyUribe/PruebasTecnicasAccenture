@@ -1,0 +1,71 @@
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 50vh;
+  text-align: center;
+  color: var(--ion-color-medium);
+
+  ion-icon {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+  }
+
+  p {
+    font-size: 16px;
+    margin: 0;
+  }
+}
+
+ion-item {
+  &.completed {
+    opacity: 0.6;
+  }
+
+  ion-label {
+    h2.completed-text {
+      text-decoration: line-through;
+      color: var(--ion-color-medium);
+    }
+
+    p {
+      font-size: 12px;
+      margin-top: 4px;
+      color: var(--ion-color-medium-shade);
+    }
+
+    .category-badge {
+      margin-top: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+
+      ion-chip {
+        margin: 0;
+        height: 24px;
+        font-size: 12px;
+
+        ion-icon {
+          font-size: 14px;
+        }
+      }
+    }
+  }
+}
+
+ion-checkbox {
+  margin-right: 16px;
+}
+
+// Optimización: Evitar reflows innecesarios
+ion-item-sliding {
+  contain: layout style paint;
+}
+
+// Estilos para botones de eliminar
+ion-item-option[color="danger"] {
+  --background: var(--ion-color-danger);
+  --color: var(--ion-color-danger-contrast);
+}
