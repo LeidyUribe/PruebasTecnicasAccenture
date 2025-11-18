@@ -1,7 +1,0 @@
-{
-  "dependencies": {
-    "@angular/fire": "^20.0.1",
-    "@ionic/storage-angular": "^4.0.0",
-    "firebase": "^11.10.0"
-  }
-}
